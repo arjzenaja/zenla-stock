@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?    // null for Google OAuth users
+  storeName     String?
+  ownerName     String?
+  location      String?
+  plan          String    @default("free")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  products      Product[]
+  categories    Category[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String
+  description String?
+  color       String    @default("#1A6B3C")
+  icon        String?
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@unique([userId, slug])
+  @@map("categories")
+}
+
+model Product {
+  id             String    @id @default(cuid())
+  name           String
+  sku            String
+  image          String?
+  currentStock   Int       @default(0)
+  reorderPoint   Int       @default(0)
+  purchasePrice  Float
+  sellingPrice   Float
+  unit           String    @default("pcs")
+  supplier       String?
+  supplierLeadTime Int?
+  status         String?   // safe, low, critical, out_of_stock
+  stockHealth    String?   // stable, low, critical
+  totalValue     Float?
+  lastAudited    DateTime?
+  userId         String
+  categoryId     String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category       Category  @relation(fields: [categoryId], references: [id])
+  stockMovements StockMovement[]
+
+  @@unique([userId, sku])
+  @@map("products")
+}
+
+model StockMovement {
+  id          String    @id @default(cuid())
+  productId   String
+  type        String    // stock_in, stock_out, correction
+  quantity    Int
+  orderId     String?
+  reason      String?
+  performedBy String?
+  stockBefore Int
+  stockAfter  Int
+  timestamp   DateTime  @default(now())
+
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("stock_movements")
+}
