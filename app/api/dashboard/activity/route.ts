@@ -13,6 +13,11 @@ export async function GET(req: Request) {
     }
 
     const activities = await prisma.stockMovement.findMany({
+      where: {
+        product: {
+          userId: session.user.id
+        }
+      },
       include: {
         product: {
           select: {

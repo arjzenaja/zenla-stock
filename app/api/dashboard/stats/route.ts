@@ -14,14 +14,18 @@ export async function GET(req: Request) {
 
     const userId = session.user.id
 
-    const [totalProducts, lowStockCount] = await Promise.all([
-      prisma.product.count(),
-      prisma.product.count({ 
-        where: { 
-          currentStock: { lte: prisma.product.fields.reorderPoint } 
-        } 
+    const [totalProducts, allProducts] = await Promise.all([
+      prisma.product.count({ where: { userId } }),
+      prisma.product.findMany({
+        where: { userId },
+        select: {
+          currentStock: true,
+          reorderPoint: true
+        }
       })
     ])
+
+    const lowStockCount = allProducts.filter(p => p.currentStock <= p.reorderPoint).length
 
     // Mocking in/out today for now as we might not have a full sales/restock model yet
     // but pulling from stock movements if they exist
