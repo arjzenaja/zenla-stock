@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
+export const dynamic = 'force-dynamic'
+
 const DEFAULT_CATEGORIES = [
   { name: 'General', slug: 'general', color: '#1A6B3C', description: 'General products' },
   { name: 'Electronics', slug: 'electronics', color: '#3B82F6', description: 'Electronic items' },
