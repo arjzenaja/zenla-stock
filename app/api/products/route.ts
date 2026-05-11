@@ -15,6 +15,9 @@ export async function GET(req: Request) {
     }
 
     const products = await prisma.product.findMany({
+      where: {
+        userId: session.user.id
+      },
       include: {
         category: true
       },
@@ -59,8 +62,8 @@ export async function POST(req: Request) {
           categoryId,
           currentStock: stockQuantity,
           reorderPoint: Number(reorderPoint) || 0,
-          purchasePrice: Number(purchasePrice),
-          sellingPrice: Number(sellingPrice),
+          purchasePrice: Number(purchasePrice) || 0,
+          sellingPrice: Number(sellingPrice) || 0,
           unit: unit || 'pcs',
           image: image || null,
           supplier: supplier || null,

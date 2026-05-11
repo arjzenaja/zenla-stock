@@ -49,17 +49,15 @@ export async function PUT(
     const { name, sku, categoryId, currentStock, reorderPoint, purchasePrice, sellingPrice, unit, image, supplier } = body
 
     const product = await prisma.product.update({
-      where: {
-        id: params.id,
-      },
+      where: { id: params.id },
       data: {
         name,
         sku,
         categoryId,
-        currentStock: Number(currentStock),
-        reorderPoint: Number(reorderPoint),
-        purchasePrice: Number(purchasePrice),
-        sellingPrice: Number(sellingPrice),
+        currentStock: Number(currentStock) || 0,
+        reorderPoint: Number(reorderPoint) || 0,
+        purchasePrice: Number(purchasePrice) || 0,
+        sellingPrice: Number(sellingPrice) || 0,
         unit,
         image: image || null,
         supplier: supplier || null,
@@ -67,7 +65,10 @@ export async function PUT(
     })
 
     return NextResponse.json(product)
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === 'P2025') {
+      return NextResponse.json({ message: 'Product not found' }, { status: 404 })
+    }
     console.error('[PRODUCT_PUT]', error)
     return new NextResponse('Internal Error', { status: 500 })
   }
@@ -86,6 +87,7 @@ export async function DELETE(
     await prisma.product.delete({
       where: {
         id: params.id,
+        userId: session.user.id,
       }
     })
 
