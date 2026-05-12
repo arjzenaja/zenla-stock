@@ -14,23 +14,44 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
-    const products = await prisma.product.findMany({
-      where: {
-        userId: session.user.id
-      },
-      include: {
-        category: true
-      },
-      orderBy: {
-        updatedAt: 'desc'
-      }
-    })
+    const { searchParams } = new URL(req.url)
+    const search = searchParams.get('search') || ''
+    const categoryId = searchParams.get('categoryId') || ''
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
+    const limit = Math.max(1, parseInt(searchParams.get('limit') || '20'))
+    const skip = (page - 1) * limit
+
+    const where: any = {
+      userId: session.user.id,
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { sku: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
+    if (categoryId) {
+      where.categoryId = categoryId
+    }
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        include: { category: true },
+        orderBy: { updatedAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.product.count({ where }),
+    ])
 
     return NextResponse.json({
       products,
-      total: products.length,
-      totalPages: 1,
-      currentPage: 1
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
     })
   } catch (error) {
     console.error('[PRODUCTS_GET]', error)
