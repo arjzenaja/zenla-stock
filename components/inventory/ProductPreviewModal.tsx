@@ -16,8 +16,8 @@ interface ProductPreviewModalProps {
 export const ProductPreviewModal: React.FC<ProductPreviewModalProps> = ({ isOpen, onClose, product }) => {
   if (!isOpen || !product) return null
 
-  const margin = product.sellingPrice && product.costPrice
-    ? (((product.sellingPrice - product.costPrice) / product.sellingPrice) * 100).toFixed(1)
+  const margin = product.sellingPrice && product.purchasePrice
+    ? (((product.sellingPrice - product.purchasePrice) / product.sellingPrice) * 100).toFixed(1)
     : null
 
   return (
@@ -120,7 +120,7 @@ export const ProductPreviewModal: React.FC<ProductPreviewModalProps> = ({ isOpen
                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Harga Beli</span>
               </div>
               <p className="text-lg font-bold text-slate-700 font-mono leading-tight">
-                {product.costPrice ? formatCurrency(product.costPrice) : '—'}
+                {product.purchasePrice ? formatCurrency(product.purchasePrice) : '—'}
               </p>
             </div>
           </div>
